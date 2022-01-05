@@ -129,10 +129,16 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
     # _method = post
     if _method == 'post' or _method == 'both':
       headers = get_headers(_header, payload)
-      
-      soup_inputs = soup.find_all('input')
-      soup_action = soup.form['action']
-      url = _url + soup_action
+    
+
+      try:
+        soup_inputs = soup.find_all('input')
+        soup_action = soup.form['action']
+        url = _url + soup_action
+      except:
+        cprint('[!]      Can\'t use POST method: did not find any form to post', 'magenta')
+      finally:
+        continue ;
 
       inputs = []
       inputs2 = []
