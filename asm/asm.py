@@ -36,7 +36,7 @@ PAYLOAD_FILES = {'ldap': 'waf_bypass_ldap.txt', 'http': 'waf_bypass_http.txt', '
 def crawler_add2queue(path, url, queue):
   if path.startswith(url) and path not in queue:
     queue.append(path)
-    #cprint(f'[!]   => {path}', 'cyan') 
+    #cprint(f'[!]   -> {path}', 'cyan') 
 
 
 ###
@@ -52,11 +52,12 @@ def crawler_get_url(url, html, queue):
 
 ###
 def crawler(url):
+  urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
   queue = []
   queue.append(url)
 
   for u in queue:
-    html = requests.get(u).text
+    html = requests.get(u, verify=False).text
     cprint('[!] Crawling: ' + u, 'cyan')
     crawler_get_url(u, html, queue)
   return queue
@@ -110,7 +111,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
   cpt_payloads = 1
 
   chaos = str(random.randint(1, len(HEADER_UA)))
-  html = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]})
+  html = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False)
   soup = BeautifulSoup(html.content, 'html.parser')
 
   for payload in payloads:
@@ -268,7 +269,7 @@ def main():
         queue = crawler(main_url)
         for sub_url in queue:
           cprint(f'[!] Scanning {sub_url}', 'cyan')
-          scanner(sub_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
+          #scanner(sub_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
       else:
         cprint(f'[!] Not Crawling {main_url}', 'cyan')
         cprint(f'[!] Scanning {main_url}', 'cyan')
