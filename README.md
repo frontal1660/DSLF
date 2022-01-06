@@ -181,6 +181,9 @@ For `ACM` you need to download a vulnerable JDK version (for example: jdk1.8.0_2
 ![](https://github.com/frontal1660/DSLF/blob/main/screenshots/acm02.png)
 
 
+# Ad-ons
+Do not forget to watch the MP4 video in "videos" project directory.
+
 # Todo
 This list is non exhaustive:
 * Update PGM to use the latest WAF bypass payload combitations
