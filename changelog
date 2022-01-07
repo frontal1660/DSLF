@@ -1,16 +1,26 @@
 # DSLF
 # Changelog
 
-# 2021-01-07
-Bufix:
-- Crawler: crash with invalid certificates
-
-# 2021-01-06
-Bufix:
-- Crawler: crash with ressources different than HTML pages
-
-# 2021-01-05
-Bufix:
-- Scanner: crash in case of POST requests when no input field is found in URL source
+### 2021-01-07
 Added:
-- Repository: new video file pushed
+- [ASN] Scanner: when encounter a 401 return code, push payload in base64 in a Autorization HTTP header
+- [Repository] Document: created a changelog file
+
+Changed:
+- [ASN] Scanner: minor updates in outputs
+
+Bugfix:
+- [ASN] Crawler: crash with invalid certificates
+
+
+### 2021-01-06
+Bugfix:
+- [ASN] Crawler: crash with ressources different than HTML pages
+
+
+### 2021-01-05
+Added:
+- [Repository] Media: new video file pushed
+
+Bugfix:
+- [ASN] Scanner: crash in case of POST requests when no input field is found in URL source
