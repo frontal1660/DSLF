@@ -187,7 +187,6 @@ Do not forget to watch the MP4 video in "videos" project directory.
 # Todo
 This list is non exhaustive:
 * Update PGM to use the latest WAF bypass payload combitations
-* Handle 401 response codes
 * Handle more form inputs combinations
 * Proxy integration
 * Many more things
