@@ -1,0 +1,16 @@
+# DSLF
+# Changelog
+
+# 2021-01-07
+Bufix:
+- Crawler: crash with invalid certificates
+
+# 2021-01-06
+Bufix:
+- Crawler: crash with ressources different than HTML pages
+
+# 2021-01-05
+Bufix:
+- Scanner: crash in case of POST requests when no input field is found in URL source
+Added:
+- Repository: new video files pushed
