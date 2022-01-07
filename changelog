@@ -13,4 +13,4 @@ Bufix:
 Bufix:
 - Scanner: crash in case of POST requests when no input field is found in URL source
 Added:
-- Repository: new video files pushed
+- Repository: new video file pushed

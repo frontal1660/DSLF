@@ -269,7 +269,7 @@ def main():
         queue = crawler(main_url)
         for sub_url in queue:
           cprint(f'[!] Scanning {sub_url}', 'cyan')
-          #scanner(sub_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
+          scanner(sub_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
       else:
         cprint(f'[!] Not Crawling {main_url}', 'cyan')
         cprint(f'[!] Scanning {main_url}', 'cyan')
