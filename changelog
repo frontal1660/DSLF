@@ -3,7 +3,8 @@
 
 ### 2021-01-08
 Added:
-- [PGM] Option: implementation of the '--protocol' option
+- [ASN] Option: implementation of the "random" value for the "payload" option
+- [PGM] Option: implementation of the "--protocol" option
 
 
 ### 2021-01-07

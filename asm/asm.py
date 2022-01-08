@@ -73,6 +73,18 @@ def get_payloads(_payload, _evil_site, _evil_port, _callback):
       payload = payload.replace('{{PORT}}', _evil_port)
       payloads.append(payload)
 
+  elif _payload == 'random':
+    tmp_payloads = []
+    with open(PAYLOAD_FILES[_callback], 'r') as fp:
+      for line in fp.readlines():
+        line = line.strip()
+        line = line.replace('{{EVIL}}', _evil_site)
+        line = line.replace('{{PORT}}', _evil_port)
+        tmp_payloads.append(line)
+    for i in range(0, 10):
+      chaos = random.randint(1, len(tmp_payloads))
+      payloads.append(tmp_payloads[chaos])
+
   elif _payload == 'full':
     with open(PAYLOAD_FILES[_callback], 'r') as fp:
       for line in fp.readlines():
@@ -84,7 +96,7 @@ def get_payloads(_payload, _evil_site, _evil_port, _callback):
   return payloads
 
 
-### 
+###
 def get_headers(header, payload):
   headers = {}
 
