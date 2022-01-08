@@ -88,6 +88,7 @@ Data:
 
 Payload:
 * classic: use generic CVE-2021-44228 and CVE-2021-45046 payloads
+* random: use ten payloads randomly choosen from the "full" option list
 * full: use all payloads derived from both CVE (to bypass WAF)
 
 # Usage
@@ -140,6 +141,17 @@ optional arguments:
   --payload PAYLOAD     classic or full
 ```
 
+
+`PGM`
+```python
+usage: pgm.py [-h] --protocol PROTOCOL
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --protocol PROTOCOL  ldap, dns, http or all
+```
+
+
 # Requierements
 The `DSLF` Modules uses few Python libraries:
 
@@ -162,18 +174,18 @@ from termcolor import cprint
 
 - `ASM`
 ```python
-import argparse, random, requests, string, sys, time, urllib3
+import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
 from datetime import datetime
 from termcolor import cprint
-from urllib.parse import urljoin
+from urllib.parse import
 ```
 
 
 - `PGM`
 ```python
-import time
-from termcolor import cprint
+import argparse, time
+from termcolor import 
 ```
 
 For `ACM` you need to download a vulnerable JDK version (for example: jdk1.8.0_20) from Oracle website, decompress it and then put all the files in acm/java/jdk/ directory. 

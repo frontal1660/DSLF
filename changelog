@@ -1,13 +1,12 @@
-# DSLF
-# Changelog
+##### DSLF - Changelog
 
-### 2021-01-08
+##### 2021-01-08
 Added:
 - [ASN] Option: implementation of the "random" value for the "payload" option
 - [PGM] Option: implementation of the "--protocol" option
 
 
-### 2021-01-07
+##### 2021-01-07
 Added:
 - [ASN] Scanner: when encounter a 401 return code, push payload in base64 in a Autorization HTTP header
 - [Repository] Document: created a changelog file
@@ -19,12 +18,12 @@ Bugfix:
 - [ASN] Crawler: crash with invalid certificates
 
 
-### 2021-01-06
+##### 2021-01-06
 Bugfix:
 - [ASN] Crawler: crash with ressources different than HTML pages
 
 
-### 2021-01-05
+##### 2021-01-05
 Added:
 - [Repository] Media: new video file pushed
 
