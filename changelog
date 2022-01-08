@@ -5,6 +5,7 @@
 Added:
 - [PGM] Option: implementation of the '--protocol' option
 
+
 ### 2021-01-07
 Added:
 - [ASN] Scanner: when encounter a 401 return code, push payload in base64 in a Autorization HTTP header
