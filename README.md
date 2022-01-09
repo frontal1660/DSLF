@@ -88,8 +88,9 @@ Data:
 
 Payload:
 * classic: use generic CVE-2021-44228 and CVE-2021-45046 payloads
-* random: use ten payloads randomly choosen from the "full" option list
-* full: use all payloads derived from both CVE (to bypass WAF)
+* random: use ten payloads randomly choosen from the "extended" option list
+* extended: use all payloads derived from both CVE (a lot)
+
 
 # Usage
 `PCM`
