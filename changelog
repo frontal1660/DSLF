@@ -3,20 +3,22 @@
 ######## 2021-01-09
 Added:
  - [ASN] Scanner: display HTTP code because the behavior of the scanner depends on HTTP code
+ - [PGM] Option: implementation of the "--output" option
 
 Changed:
  - [ASN] Scanner: now scanning while crawling (huge improvment)
- - [ASN] Scanner: ths "full" value of the "payload" option is now "extended"
+ - [ASN] Scanner: ths "full" value of the "--payload" option is now "extended"
  - [ASN] Scanner: minor updates in outputs
 
 Bugfix:
  - [ASN] Scanner: crash when URL does not exist or when the remote server returns a CLOSED TCP flag
  - [ASN] Scanner: minor fixes in outputs
+ - [ACM] Callback: crash when JDK is not in correct directory
 
 
 ######## 2021-01-08
 Added:
- - [ASN] Option: implementation of the "random" value for the "payload" option
+ - [ASN] Option: implementation of the "random" value for the "--payload" option
  - [PGM] Option: implementation of the "--protocol" option
 
 Changed:
@@ -26,7 +28,7 @@ Changed:
 ######## 2021-01-07
 Added:
  - [ASN] Scanner: when encounter a 401 return code, push payload in base64 in a Autorization HTTP header
- - [Repository] Document: created a changelog file
+ - [REPOSITORY] Changelog: created a changelog file
 
 Changed:
  - [ASN] Scanner: minor updates in outputs

