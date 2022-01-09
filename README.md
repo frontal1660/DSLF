@@ -9,8 +9,8 @@ It is the ultimate log4j vulnerabilities assessor. It comes with four individual
 
 It covers CVE-2021-44228 and CVE-2021-45046.
 
-`DSLF` was coded to help CyberSecurity Teams all over the world with log4j vulnerabilites.
-It is not designed for malicious activities! Be aware.
+`DSLF` was coded to help CyberSecurity Teams all over the world with log4j threats.
+It was NOT designed for malicious activities! Be aware.
 
 
 # Description
