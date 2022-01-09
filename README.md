@@ -212,3 +212,9 @@ This project is licensed under GNU General Public License.
 
 # Author
 Julien GARAVET
+
+
+# Special thanks
+* For testing: Leo KHATCHADOURIAN
+* For payloads: Maciej Pulikowski (https://github.com/Puliczek/CVE-2021-44228-PoC-log4j-bypass-words)
+* For poc: FullHunt.io (https://github.com/fullhunt/log4j-scan)
