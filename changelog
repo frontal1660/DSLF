@@ -1,50 +1,59 @@
 ######## DSLF - Changelog
 
-######## 2021-01-09
+######## 2021-01-10
 Added:
- - [ASN] Scanner: display HTTP code because the behavior of the scanner depends on HTTP code
- - [PGM] Option: implementation of the "--output" option
+ - [ASN] Implementation of the "nasty" value for the "--payload" option
+ - [ASN] Implementation of the "quick" value for the "--crawler" option
 
 Changed:
- - [ASN] Scanner: now scanning while crawling (huge improvment)
- - [ASN] Scanner: ths "full" value of the "--payload" option is now "extended"
- - [ASN] Scanner: minor updates in outputs
+ - [ASN] The "full" value of "--data" option is now "extended"
+
+
+######## 2021-01-09
+Added:
+ - [ASN] Display HTTP code because the behavior of the scanner depends on HTTP code
+ - [PGM] Implementation of the "--output" option
+
+Changed:
+ - [ASN] Now scanning while crawling (huge improvment)
+ - [ASN] The "full" value of the "--payload" option is now "extended"
+ - [ASN] Minor updates in outputs
 
 Bugfix:
- - [ASN] Scanner: crash when URL does not exist or when the remote server returns a CLOSED TCP flag
- - [ASN] Scanner: minor fixes in outputs
- - [ACM] Callback: crash when JDK is not in correct directory
+ - [ASN] Crash when URL does not exist or when the remote server returns a CLOSED TCP flag
+ - [ASN] Minor fixes in outputs
+ - [ACM] Crash when JDK is not in correct directory
 
 
 ######## 2021-01-08
 Added:
- - [ASN] Option: implementation of the "random" value for the "--payload" option
- - [PGM] Option: implementation of the "--protocol" option
+ - [ASN] Implementation of the "random" value for the "--payload" option
+ - [PGM] Implementation of the "--protocol" option
 
 Changed:
- - [ASN] Scanner: minor updates in outputs
+ - [ASN] Minor updates in outputs
 
 
 ######## 2021-01-07
 Added:
- - [ASN] Scanner: when encounter a 401 return code, push payload in base64 in a Autorization HTTP header
- - [REPOSITORY] Changelog: created a changelog file
+ - [ASN] When encounter a 401 return code, push payload in base64 in a Autorization HTTP header
+ - [REPO] Created a changelog file
 
 Changed:
- - [ASN] Scanner: minor updates in outputs
+ - [ASN] Minor updates in outputs
 
 Bugfix:
- - [ASN] Crawler: crash with invalid certificates
+ - [ASN] Crash with invalid certificates
 
 
 ######## 2021-01-06
 Bugfix:
- - [ASN] Crawler: crash with ressources different than HTML pages
+ - [ASN] Crash with ressources different than HTML pages
 
 
 ######## 2021-01-05
 Added:
- - [Repository] Media: new video file pushed
+ - [REPO] New video file pushed
 
 Bugfix:
- - [ASN] Scanner: crash in case of POST requests when no input field is found in URL source
+ - [ASN] Cash in case of POST requests when no input field is found in URL HTML source

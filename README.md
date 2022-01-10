@@ -70,6 +70,7 @@ Callback:
 Crawl:
 * no: crawl the URL
 * yes: do not crawl the URL
+* quick: stop the crawl after 10 URL found
 
 Method:
 * get: use GET method
@@ -87,12 +88,13 @@ Header:
 
 Data:
 * classic: post payload in all inputs at same time
-* full: classic option plus post payload in input one by one
+* extended: classic option plus payload posted in input, one by one
 
 Payload:
 * classic: use generic CVE-2021-44228 and CVE-2021-45046 payloads
-* random: use ten payloads randomly choosen from the "extended" option list
+* random: use 10 payloads randomly choosen from the "extended" option list
 * extended: use all payloads derived from both CVE (a lot)
+* nasty: use 10 very nasty payloads (different from the one used in previous options)
 
 
 # Usage
@@ -127,9 +129,8 @@ optional arguments:
 
 `ASM`
 ```python
-01:38:10[> root@redteam[> /root/[> python3 asm.py -h
-usage: asm.py [-h] --url URL --evil_site EVILSITE --evil_port EVILPORT [--callback CALLBACK] [--crawl CRAWL] [--method METHOD]
-              [--param PARAM] [--header HEADER] [--data DATA] [--payload PAYLOAD]
+usage: asm.py [-h] --url URL --evil_site EVILSITE --evil_port EVILPORT [--callback CALLBACK] [--crawl CRAWL] [--method METHOD] [--param PARAM] [--header HEADER]
+              [--data DATA] [--payload PAYLOAD]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -141,8 +142,8 @@ optional arguments:
   --method METHOD       get, post or both
   --param PARAM         none or classic
   --header HEADER       none, classic or noua
-  --data DATA           classic or full
-  --payload PAYLOAD     classic or full
+  --data DATA           classic or extended
+  --payload PAYLOAD     classic, random, extended or nasty
 ```
 
 
@@ -202,7 +203,6 @@ Do not forget to watch the MP4 video in "videos" project directory.
 
 # Todo
 This list is non exhaustive:
-* Update PGM to use the latest WAF bypass payload combitations
 * Handle more form inputs combinations
 * Proxy integration
 * Many more things
@@ -218,6 +218,6 @@ Julien GARAVET
 
 
 # Special thanks
-* For testing: Leo KHATCHADOURIAN
-* For payloads: Maciej Pulikowski (https://github.com/Puliczek/CVE-2021-44228-PoC-log4j-bypass-words)
-* For poc: FullHunt.io (https://github.com/fullhunt/log4j-scan)
+* Testing: Leo KHATCHADOURIAN
+* New payloads: Maciej Pulikowski (https://github.com/Puliczek/CVE-2021-44228-PoC-log4j-bypass-words)
+* Proof of concept: FullHunt.io (https://github.com/fullhunt/log4j-scan)

