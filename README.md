@@ -138,7 +138,7 @@ optional arguments:
   --evil_site EVILSITE  IP or FQDN for the callback
   --evil_port EVILPORT  TCP port for the callback
   --callback CALLBACK   ldap, http or dns
-  --crawl CRAWL         no or yes
+  --crawl CRAWL         no, yes or quick
   --method METHOD       get, post or both
   --param PARAM         none or classic
   --header HEADER       none, classic or noua
