@@ -1,5 +1,11 @@
 ######## DSLF - Changelog
 
+######## 2021-01-11
+
+Changed:
+ - [REPO] Changed GNU General Public License v3.0 to MIT License
+
+
 ######## 2021-01-10
 Added:
  - [ASN] Implementation of the "nasty" value for the "--payload" option
