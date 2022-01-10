@@ -1,10 +1,5 @@
 ######## DSLF - Changelog
 
-######## 2021-01-11
-
-Changed:
- - [REPO] Changed GNU General Public License v3.0 to MIT License
-
 
 ######## 2021-01-10
 Added:
@@ -13,6 +8,7 @@ Added:
 
 Changed:
  - [ASN] The "full" value of "--data" option is now "extended"
+ - [REPO] Changed GNU General Public License v3.0 to MIT License
 
 
 ######## 2021-01-09
