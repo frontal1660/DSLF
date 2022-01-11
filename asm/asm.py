@@ -159,7 +159,6 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
    
       if response.status_code == 401:
         creds = payload + ':' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-        creds = 'username:password'
         creds = creds.encode('ascii')
         creds64_b = base64.b64encode(creds)
         creds64_m = creds64_b.decode('ascii')
