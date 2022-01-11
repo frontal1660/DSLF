@@ -1,5 +1,9 @@
 ######## DSLF - Changelog
 
+######## 2021-01-11
+Bugfix:
+ - [ASN] bug when pushing payload in 401 pages
+
 
 ######## 2021-01-10
 Added:
