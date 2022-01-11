@@ -131,7 +131,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
 
   try:
     chaos = str(random.randint(1, len(HEADER_UA)))
-    response = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False)
+    response = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False, allow_redirects=True, timeout=TIMEOUT)
     soup = BeautifulSoup(response.content, 'html.parser')
   except:
     cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
@@ -163,7 +163,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
         creds64_b = base64.b64encode(creds)
         creds64_m = creds64_b.decode('ascii')
         headers.update({'Authorization': 'Basic ' + creds64_m})
-        requests.request(url=_url, method='GET', headers=headers, verify=False, timeout=TIMEOUT)
+        requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
 
         time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
         cpt_payloads = cpt_payloads + 1
@@ -189,7 +189,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
  
       try:
         if _param == 'none':
-          requests.request(url=url, method='POST', headers=headers, data=data, verify=False, timeout=TIMEOUT)
+          requests.request(url=url, method='POST', headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
         elif _param == 'classic':
           requests.request(url=url, method='POST', params={'q': payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
         time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
@@ -208,7 +208,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
               data.update({val2: chaos})
           try:
             if _param == 'none':
-              requests.request(url=url, method='POST', headers=headers, data=data, verify=False, timeout=TIMEOUT)
+              requests.request(url=url, method='POST', headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
             elif _param == 'classic':
               requests.request(url=url, method='POST', params={'r': payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
             time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
