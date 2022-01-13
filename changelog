@@ -1,9 +1,14 @@
 ######## DSLF - Changelog
 
+######## 2021-01-13
+Bugfix:
+ - [ASN] Crash sometimes with 401 pages
+
+
 ######## 2021-01-11
 Bugfix:
- - [ASN] bug when pushing payload in 401 pages
- - [ASN] allow redirection was omitted in some request calls
+ - [ASN] Bug when pushing payload in 401 pages
+ - [ASN] Allow redirection was omitted in some request calls
 
 
 ######## 2021-01-10
