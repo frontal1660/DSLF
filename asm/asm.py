@@ -1,8 +1,3 @@
-
-Julien GARAVET
-13:26 (il y a 1 minute)
-À moi
-
 #!/usr/bin/env python3
 import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
