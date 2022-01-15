@@ -1,7 +1,6 @@
 ######## DSLF - Changelog
 
 ######## 2021-01-15
-
 Added:
  - [ASN] Authenticated scans but be done by providing credentials for 401 popup ("--auth" option)
  
