@@ -1,5 +1,20 @@
 ######## DSLF - Changelog
 
+######## 2021-01-15
+Total reimplementation of ASN
+
+Added:
+ - [ASN] Authenticated scans but be done by providing credentials for 401 popup ("--auth" option)
+ 
+Changed:
+ - [ASN] Total reimplementation of ASN
+ - [ASN] Dropped idea of pushing payload in 401 prompt
+ - [ASN] Most of exceptions are now correctly handled
+
+Bugfix:
+ - [ASN] Many small bug fixed
+
+
 ######## 2021-01-13
 Bugfix:
  - [ASN] Crash sometimes with 401 pages

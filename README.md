@@ -59,6 +59,7 @@ This screenshot shows `PGM` generating log4j LDAP payloads:
 * ${lower:j}
 * ${upper:j}
 
+
 # Features
 `ASM`
 
@@ -129,16 +130,17 @@ optional arguments:
 
 `ASM`
 ```python
-usage: asm.py [-h] --url URL --evil_site EVILSITE --evil_port EVILPORT [--callback CALLBACK] [--crawl CRAWL] [--method METHOD] [--param PARAM] [--header HEADER]
-              [--data DATA] [--payload PAYLOAD]
+usage: asm.py [-h] --url URL [--auth AUTH] --evil_site EVILSITE --evil_port EVILPORT [--callback CALLBACK] [--crawl CRAWL] [--method METHOD] [--param PARAM] [--header HEADER] [--data DATA]
+              [--payload PAYLOAD]
 
 optional arguments:
   -h, --help            show this help message and exit
   --url URL             URL or file with URL to scan
+  --auth AUTH           no or file containing 401 credentials in user:pass format
   --evil_site EVILSITE  IP or FQDN for the callback
   --evil_port EVILPORT  TCP port for the callback
   --callback CALLBACK   ldap, http or dns
-  --crawl CRAWL         no, yes or quick
+  --crawl CRAWL         no, yes, quick
   --method METHOD       get, post or both
   --param PARAM         none or classic
   --header HEADER       none, classic or noua
@@ -183,7 +185,7 @@ import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
 from datetime import datetime
 from termcolor import cprint
-from urllib.parse import
+from urllib.parse import urljoin
 ```
 
 

