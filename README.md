@@ -192,7 +192,7 @@ from urllib.parse import urljoin
 - `PGM`
 ```python
 import argparse, time
-from termcolor import 
+from termcolor import cprint
 ```
 
 For `ACM` you need to download a vulnerable JDK version (for example: jdk1.8.0_20) from Oracle website, decompress it and then put all the files in acm/java/jdk/ directory. 
