@@ -302,7 +302,7 @@ def main():
     _data = args.data
     _payload = args.payload
 
-    #show_banner(url_tmp, _auth, _evil_site, _evil_port, _callback, _crawl, _method, _param, _header, _data, _payload, 1)
+    show_banner(url_tmp, _auth, _evil_site, _evil_port, _callback, _crawl, _method, _param, _header, _data, _payload, 1)
 
     for main_url in _url:
 
