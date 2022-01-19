@@ -184,6 +184,8 @@ from termcolor import cprint
 import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
 from datetime import datetime
+from requests.auth import HTTPBasicAuth
+from requests_ntlm import HttpNtlmAuth
 from termcolor import cprint
 from urllib.parse import urljoin
 ```

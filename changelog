@@ -1,5 +1,18 @@
 ######## DSLF - Changelog
 
+
+######## 2021-01-19
+Added:
+ - [ASN]
+ - [ASN] Support of 401 NTLM authentication implemented
+
+Changed:
+ - [ASN] Basic and NTLM authentications are fully and deeply integrated in the scanner
+
+Bugfix:
+ - [ASN] Major bugs fixed
+
+
 ######## 2021-01-15
 Added:
  - [ASN] Authenticated scans but be done by providing credentials for 401 popup ("--auth" option)
